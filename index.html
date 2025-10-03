@@ -1,247 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Document Search System</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f9f9f9; color: #333; padding: 20px; }
-.container { max-width: 1400px; margin: 0 auto; }
-.header { text-align: center; margin-bottom: 30px; }
-.header h1 { font-size: 2.5rem; color: #5a67d8; }
-.header p { font-size: 1.1rem; color: #4a5568; }
-.main-layout { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
-.sidebar { display: flex; flex-direction: column; gap: 20px; }
-.section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-.section h2 { color: #5a67d8; margin-bottom: 15px; font-size: 1.2rem; }
-.upload-area { border: 3px dashed #cbd5e0; border-radius: 10px; padding: 25px; text-align: center; cursor: pointer; background: #f8f9fa; transition: all 0.3s ease; }
-.upload-area.dragover { border-color: #38a169; background: #f0fff4; }
-#fileInput { display: none; }
-.btn { background: linear-gradient(45deg,#5a67d8,#667eea); color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; width:100%; font-size:1rem; margin-top:10px; }
-.btn:hover { transform: translateY(-2px); }
-.search-input { width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:8px; font-size:1rem; margin-bottom:5px; }
-.search-input:focus { outline:none; border-color:#5a67d8; box-shadow:0 0 0 3px rgba(90,103,216,0.1);}
-.document-list { max-height:400px; overflow-y:auto; margin-top:10px; }
-.document-item { padding:10px; margin-bottom:8px; background:#f8f9fa; border-left:4px solid #5a67d8; cursor:pointer; }
-.document-item:hover { background:#e6f3ff; transform:translateX(5px); }
-.main-content { background:white; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.1); padding:20px; min-height:500px; }
-.results-grid { display:grid; grid-template-columns:400px 1fr; gap:20px; }
-.results-list { border-right:2px solid #e2e8f0; padding-right:15px; overflow-y:auto; max-height:80vh; }
-.result-item { padding:10px; margin-bottom:10px; cursor:pointer; }
-.result-item:hover { background:#e6f3ff; }
-.document-viewer { padding:15px; overflow-y:auto; background:white; border-radius:8px; max-height:80vh; }
-.highlight { background:yellow; font-weight:bold; border-radius:3px; padding:1px 2px; }
-.empty-state { text-align:center; color:#718096; padding:50px 0; }
-.loading { display:none; text-align:center; padding:20px; }
-.loading.show { display:block; }
-.spinner { border:3px solid #f3f3f3; border-top:3px solid #5a67d8; border-radius:50%; width:30px; height:30px; animation:spin 1s linear infinite; margin:0 auto 10px; }
-@keyframes spin {0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-.autocomplete-list { list-style:none; padding:0; margin:0; border:1px solid #e2e8f0; border-radius:6px; max-height:150px; overflow-y:auto; position:absolute; width:300px; background:white; z-index:1000; }
-.autocomplete-list li { padding:8px 12px; cursor:pointer; }
-.autocomplete-list li:hover { background:#e6f3ff; }
-.doc-link { color:#5a67d8; text-decoration:underline; cursor:pointer; display:block; margin-bottom:5px; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Document Search System</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
 </head>
 <body>
-<div class="container">
+  <div class="container">
     <div class="header">
-        <h1>📚 Document Search System</h1>
-        <p>Upload documents, search by keywords or partial words, and view results</p>
+      <h1>📚 Document Search System</h1>
+      <p>Upload documents, search by keywords or partial words, and view results</p>
     </div>
 
     <div class="main-layout">
-        <div class="sidebar">
-            <div class="section">
-                <h2>📁 Upload Documents</h2>
-                <div class="upload-area" id="uploadArea">
-                    <p>Click or drag files here (TXT, PDF, DOCX)</p>
-                    <input type="file" id="fileInput" multiple accept=".txt,.pdf,.docx"/>
-                </div>
-                <div class="loading" id="uploadLoading"><div class="spinner"></div><p>Processing documents...</p></div>
-            </div>
-
-            <div class="section" style="position:relative;">
-                <h2>🔍 Search</h2>
-                <input type="text" id="searchInput" class="search-input" placeholder="Enter word..." autocomplete="off" />
-                <ul id="autocompleteList" class="autocomplete-list"></ul>
-                <button class="btn" onclick="performSearch()">Search Documents</button>
-            </div>
-
-            <div class="section">
-                <h2>📄 Documents (<span id="docCount">0</span>)</h2>
-                <button class="btn" style="background:#e53e3e;" onclick="clearAllDocuments()">Clear All Documents</button>
-                <div class="document-list" id="documentList">
-                    <div class="empty-state">No documents uploaded yet</div>
-                </div>
-            </div>
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- Upload Section -->
+        <div class="section">
+          <h2>📁 Upload Documents</h2>
+          <div class="upload-area" id="uploadArea">
+            <p>Click or drag files here (TXT, PDF, DOCX)</p>
+            <input type="file" id="fileInput" multiple accept=".txt,.pdf,.docx"/>
+          </div>
+          <div class="loading" id="uploadLoading">
+            <div class="spinner"></div>
+            <p>Processing documents...</p>
+          </div>
         </div>
 
-        <div class="main-content" id="mainContent">
-            <div class="empty-state"><h3>Upload documents and start searching</h3></div>
+        <!-- Search Section -->
+        <div class="section" style="position:relative;">
+          <h2>🔍 Search</h2>
+          <input type="text" id="searchInput" class="search-input" placeholder="Enter word..." autocomplete="off"/>
+          <ul id="autocompleteList" class="autocomplete-list"></ul>
+          <button class="btn" onclick="performSearch()">Search Documents</button>
         </div>
+
+        <!-- Document List -->
+        <div class="section">
+          <h2>📄 Documents (<span id="docCount">0</span>)</h2>
+          <button class="btn" style="background:#e53e3e;" onclick="clearAllDocuments()">Clear All Documents</button>
+          <div class="document-list" id="documentList">
+            <div class="empty-state">No documents uploaded yet</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content" id="mainContent">
+        <div class="empty-state">
+          <h3>Upload documents and start searching</h3>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<script>
-const pdfjsLib = window['pdfjs-dist/build/pdf'];
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
-
-class DocumentDatabase {
-    constructor() {
-        this.documents = JSON.parse(localStorage.getItem('documents') || '[]');
-        this.searchIndex = JSON.parse(localStorage.getItem('searchIndex') || '{}');
-    }
-    save() { localStorage.setItem('documents', JSON.stringify(this.documents)); localStorage.setItem('searchIndex', JSON.stringify(this.searchIndex)); }
-    addDocument(doc) {
-        const id = Date.now().toString();
-        const document = {id, name:doc.name, content:doc.content, wordCount:doc.content.split(/\s+/).length};
-        this.documents.push(document);
-        this.updateSearchIndex(document);
-        this.save();
-        return document;
-    }
-    updateSearchIndex(document) {
-        const words = document.content.toLowerCase().replace(/[^\w\s]/g,' ').split(/\s+/).filter(w=>w.length>2);
-        const wordFreq = {};
-        words.forEach(word=>wordFreq[word]=(wordFreq[word]||0)+1);
-        Object.keys(wordFreq).forEach(word=>{
-            if(!this.searchIndex[word]) this.searchIndex[word]=[];
-            this.searchIndex[word].push({docId:document.id, frequency:wordFreq[word], docName:document.name});
-        });
-    }
-    getAllDocuments(){ return this.documents; }
-    getDocument(id){ return this.documents.find(d=>d.id===id); }
-    searchDocuments(query){
-        query=query.toLowerCase();
-        const results=[];
-        const words = Object.keys(this.searchIndex).filter(w=>w.startsWith(query));
-        words.forEach(word=>{
-            this.searchIndex[word].forEach(item=>{
-                const doc=this.documents.find(d=>d.id===item.docId);
-                if(doc) results.push({document:doc, frequency:item.frequency, searchTerm:query});
-            });
-        });
-        return results.sort((a,b)=>b.frequency-a.frequency);
-    }
-    clearAll(){
-        this.documents=[]; this.searchIndex={}; this.save();
-    }
-}
-const db = new DocumentDatabase();
-let currentResults=[], currentSearchTerm='';
-
-// Upload
-const uploadArea = document.getElementById('uploadArea');
-const fileInput = document.getElementById('fileInput');
-uploadArea.addEventListener('click', ()=>fileInput.click());
-uploadArea.addEventListener('dragover', e=>{e.preventDefault(); uploadArea.classList.add('dragover');});
-uploadArea.addEventListener('dragleave', e=>{uploadArea.classList.remove('dragover');});
-uploadArea.addEventListener('drop', e=>{e.preventDefault(); uploadArea.classList.remove('dragover'); handleFiles(Array.from(e.dataTransfer.files));});
-fileInput.addEventListener('change', e=>handleFiles(Array.from(e.target.files)));
-
-async function handleFiles(files){
-    document.getElementById('uploadLoading').classList.add('show');
-    for(const file of files){
-        try{
-            let content='', ext=file.name.split('.').pop().toLowerCase();
-            if(ext==='txt') content=await readText(file);
-            else if(ext==='pdf') content=await readPdf(file);
-            else if(ext==='docx') content=await readDocx(file);
-            else { alert(`Unsupported: ${file.name}`); continue; }
-            db.addDocument({name:file.name, content});
-        }catch(err){console.error(err);}
-    }
-    document.getElementById('uploadLoading').classList.remove('show');
-    updateDocumentList();
-    fileInput.value='';
-}
-
-function readText(file){ return new Promise((res,rej)=>{ const reader=new FileReader(); reader.onload=e=>res(e.target.result); reader.onerror=rej; reader.readAsText(file);}); }
-function readPdf(file){ return new Promise((res,rej)=>{ const reader=new FileReader(); reader.onload=async e=>{ try{ const typed=new Uint8Array(e.target.result); const pdf=await pdfjsLib.getDocument(typed).promise; let text=''; for(let i=1;i<=pdf.numPages;i++){ const page=await pdf.getPage(i); const content=await page.getTextContent(); text+=content.items.map(item=>item.str).join(' ')+'\n\n'; } res(text);}catch(err){rej(err);} }; reader.readAsArrayBuffer(file);}); }
-function readDocx(file){ return new Promise((res,rej)=>{ const reader=new FileReader(); reader.onload=async e=>{ const result=await mammoth.extractRawText({arrayBuffer:e.target.result}); res(result.value); }; reader.readAsArrayBuffer(file);}); }
-
-function updateDocumentList(){
-    const docs=db.getAllDocuments();
-    document.getElementById('docCount').textContent=docs.length;
-    const list=document.getElementById('documentList');
-    if(docs.length===0){ list.innerHTML='<div class="empty-state">No documents uploaded yet</div>'; return; }
-    list.innerHTML=docs.map(d=>`<div class="document-item" onclick="viewDocument('${d.id}')"><div>${d.name}</div><div>${d.wordCount} words</div></div>`).join('');
-}
-
-// Clear All Documents
-function clearAllDocuments(){
-    if(!confirm("Clear all documents? This cannot be undone.")) return;
-    db.clearAll();
-    updateDocumentList();
-    document.getElementById('mainContent').innerHTML='<div class="empty-state">All documents cleared</div>';
-}
-
-// Search + Autocomplete
-const searchInput=document.getElementById('searchInput');
-const autocompleteList=document.getElementById('autocompleteList');
-
-searchInput.addEventListener('input', ()=>{
-    const query=searchInput.value.trim().toLowerCase();
-    autocompleteList.innerHTML='';
-    if(!query) return;
-    const suggestions=new Set();
-    db.getAllDocuments().forEach(doc=>{
-        doc.content.toLowerCase().split(/\W+/).forEach(word=>{
-            if(word.startsWith(query) && word.length>query.length) suggestions.add(word);
-        });
-    });
-    Array.from(suggestions).slice(0,10).forEach(word=>{
-        const li=document.createElement('li');
-        li.textContent=word;
-        li.addEventListener('click', ()=>{
-            searchInput.value=word;
-            autocompleteList.innerHTML='';
-            performSearch();
-        });
-        autocompleteList.appendChild(li);
-    });
-});
-
-document.addEventListener('click', e=>{
-    if(!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) autocompleteList.innerHTML='';
-});
-
-function highlightSearchTerms(content, searchTerm){
-    if(!searchTerm) return content.replace(/\n/g,'<br>');
-    const regex=new RegExp(`(${searchTerm}\\w*)`,'gi');
-    return content.replace(regex,'<span class="highlight">$1</span>').replace(/\n/g,'<br>');
-}
-
-function performSearch(){
-    currentSearchTerm=searchInput.value.trim();
-    if(!currentSearchTerm) return alert('Enter a search term');
-    currentResults=db.searchDocuments(currentSearchTerm);
-    displayResults();
-}
-
-function displayResults(){
-    if(currentResults.length===0){ document.getElementById('mainContent').innerHTML='<div class="empty-state">No results found</div>'; return; }
-    const listHTML=currentResults.map((res,i)=>{
-        const count=(res.document.content.match(new RegExp(currentSearchTerm,'gi'))||[]).length;
-        return `<span class="doc-link" onclick="viewResult(${i})">${res.document.name} (${count} occurrences)</span>`;
-    }).join('');
-    document.getElementById('mainContent').innerHTML=`<div>${listHTML}</div><div class="document-viewer" id="documentViewer" style="margin-top:20px;"><div class="empty-state">Select a document to preview</div></div>`;
-}
-
-function viewResult(index){
-    const doc=currentResults[index].document;
-    document.getElementById('documentViewer').innerHTML=highlightSearchTerms(doc.content,currentSearchTerm);
-}
-
-function viewDocument(id){
-    const doc=db.getDocument(id);
-    document.getElementById('mainContent').innerHTML=`<div class="document-viewer">${highlightSearchTerms(doc.content,'')}</div>`;
-}
-
-updateDocumentList();
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
